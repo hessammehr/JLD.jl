@@ -12,8 +12,6 @@ import Base: convert, length, show, done, next, ndims, start, delete!, eltype,
 import Compat: lastindex
 import LegacyStrings: UTF16String
 
-const mparse = @static VERSION ≥ v"0.7.0-DEV.2437" ? Meta.parse : Base.parse
-
 @noinline gcuse(x) = x # because of use of `pointer`, need to mark gc-use end explicitly
 
 const magic_base = "Julia data file (HDF5), version "
@@ -844,7 +842,7 @@ writeas(x::Core.SimpleVector) = SimpleVectorWrapper([x...])
 
 # function to convert string(mod::Module) back to mod::Module
 function modname2mod(modname::AbstractString)
-    mparse(modname == "Main" ? modname : string("Main.", modname))
+    Meta.parse(modname == "Main" ? modname : string("Main.", modname))
 end
 
 
@@ -1002,7 +1000,7 @@ end
 function _julia_type(s::AbstractString)
     typ = get(_typedict, s, UnconvertedType)
     if typ == UnconvertedType
-        sp = mparse(s, raise=false)
+        sp = Meta.parse(s, raise=false)
         if (isa(sp, Expr) && (sp.head == :error || sp.head == :continue || sp.head == :incomplete))
             println("error parsing type string ", s)
             eval(sp)
@@ -1075,7 +1073,7 @@ function full_typename(io::IO, ::JldFile, x)
     # A different implementation will be required to support custom immutables
     # or things as simple as Int16(1).
     s = sprint(show, x)
-    if isbits(x) && mparse(s) === x && !isa(x, Tuple)
+    if isbits(x) && Meta.parse(s) === x && !isa(x, Tuple)
         print(io, s)
     else
         error("type parameters with objects of type ", typeof(x), " are currently unsupported")
