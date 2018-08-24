@@ -3,15 +3,12 @@
 ###############################################
 
 module JLD00
-using HDF5, LegacyStrings, Compat
-using Compat.Printf
-using Compat: @warn
+using HDF5, LegacyStrings
+using Printf
 # Add methods to...
 import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o_delete, name, names, read, size, write,
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
 import Base: length, show, done, next, start, delete!
-import Compat: lastindex
-const mparse = @static VERSION ≥ v"0.7.0-DEV.2437" ? Meta.parse : Base.parse
 import ..JLD
 
 # See julia issue #8907
@@ -52,7 +49,7 @@ mutable struct JldFile <: HDF5.DataFile
                      writeheader::Bool=false, mmaparrays::Bool=false)
         f = new(plain, version, toclose, writeheader, mmaparrays)
         if toclose
-            @compat finalizer(close, f)
+            finalizer(close, f)
         end
         f
     end
@@ -448,7 +445,7 @@ function read(obj::JldDataset, T::DataType)
         if !isempty(params)
             p = Vector{Any}(undef, length(params))
             for i = 1:length(params)
-                p[i] = Core.eval(@__MODULE__, mparse(params[i]))
+                p[i] = Core.eval(@__MODULE__, Meta.parse(params[i]))
             end
             T = T.name.wrapper
             T = T{p...}
@@ -935,7 +932,7 @@ _typedict["CompositeKind"] = CompositeKind
 function _julia_type(s::AbstractString)
     typ = get(_typedict, s, UnconvertedType)
     if typ == UnconvertedType
-        e = mparse(s)
+        e = Meta.parse(s)
         e = JLD.fixtypes(e)
         typ = UnsupportedType
         if JLD.is_valid_type_ex(e)

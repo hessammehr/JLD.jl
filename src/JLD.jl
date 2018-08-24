@@ -1,15 +1,13 @@
 __precompile__()
 
 module JLD
-using HDF5, FileIO, Compat
-using Compat.Printf
-using Compat: IOBuffer, @warn
+using HDF5, FileIO
+using Printf
 
 import HDF5: close, dump, exists, file, getindex, setindex!, g_create, g_open, o_delete, name, names, read, write,
              HDF5ReferenceObj, HDF5BitsKind, ismmappable, readmmap
 import Base: convert, length, show, done, next, ndims, start, delete!, eltype,
              size, sizeof, unsafe_convert, datatype_pointerfree
-import Compat: lastindex
 import LegacyStrings: UTF16String
 
 @noinline gcuse(x) = x # because of use of `pointer`, need to mark gc-use end explicitly
@@ -78,7 +76,7 @@ mutable struct JldFile <: HDF5.DataFile
                 Dict{HDF5Datatype,Type}(), Dict{Type,HDF5Datatype}(),
                 Dict{HDF5ReferenceObj,WeakRef}(), String[])
         if toclose
-            @compat finalizer(close, f)
+            finalizer(close, f)
         end
         f
     end

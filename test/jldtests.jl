@@ -1,16 +1,8 @@
 using HDF5, JLD
-using Compat, LegacyStrings
-using Compat.Test, Compat.LinearAlgebra
-using Compat: @warn
+using LegacyStrings
 
 @static if VERSION ≥ v"0.7.0-DEV.2329"
     using Profile
-end
-
-@static if VERSION ≥ v"0.7.0-DEV.2437"
-    const mparse = Meta.parse
-else
-    const mparse = Base.parse
 end
 
 # Define variables of different types
@@ -74,9 +66,9 @@ unicode_char = '\U10ffff'
 β = Any[[1, 2], [3, 4]]  # issue #93
 vv = Vector{Int}[[1,2,3]]  # issue #123
 typevar = Array{Int}[[1]]
-eval(mparse("typevar_lb = (Vector{U} where U<:Integer)[[1]]"))
-eval(mparse("typevar_ub = (Vector{U} where Int<:U<:Any)[[1]]"))
-eval(mparse("typevar_lb_ub = (Vector{U} where Int<:U<:Real)[[1]]"))
+eval(Meta.parse("typevar_lb = (Vector{U} where U<:Integer)[[1]]"))
+eval(Meta.parse("typevar_ub = (Vector{U} where Int<:U<:Any)[[1]]"))
+eval(Meta.parse("typevar_lb_ub = (Vector{U} where Int<:U<:Real)[[1]]"))
 # Unexported type:
 cpus = Base.Sys.cpu_info()
 # Immutable type:
@@ -161,7 +153,7 @@ struct BitsUnion
 end
 bitsunion = BitsUnion(5.0)
 # Immutable with a union of Types
-let UT = eval(mparse("Type{T} where T <: Union{Int64, Float64}"))
+let UT = eval(Meta.parse("Type{T} where T <: Union{Int64, Float64}"))
     @eval struct TypeUnionField
         x::$UT
     end
@@ -523,7 +515,7 @@ for compatible in (false, true), compress in (false, true)
     close(fid)
 
     # mmapping currently fails on Windows; re-enable once it can work
-    for mmap = (@static Compat.Sys.iswindows() ? false : (false, true))
+    for mmap = (@static Sys.iswindows() ? false : (false, true))
         fidr = jldopen(fn, "r", mmaparrays=mmap)
         @test creator(fidr, "VERSION") == VERSION
         @test creator(fidr, "WORD_SIZE") == Sys.WORD_SIZE
